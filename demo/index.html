@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Instagram - my latest media</title>
+
+  <style>
+    .element-root{
+      display:inline-block;
+    }
+    .element-bottom{
+      margin-bottom:20px;
+    }
+    .element-bottom span:not(:first-child){
+      padding-left:5px;
+    }
+    .element-top img{
+      width:500px;
+    }
+  </style>
+  </head>
+  <body>
+    Nothing Yet
+  </body>
+  <script type="text/javascript">
+    window.onload=function(){
+
+      var App  = (function () {
+
+        var root = null;
+
+        function getData(fn) {
+          /*jquery would help*/
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET','http://localhost:3030/get/')
+          xhr.send(null);
+          xhr.onreadystatechange = function () {
+            var _DONE = 4; //request is done
+            var _OK = 200; //status 200 - sucessfull return
+            if (xhr.readyState === _DONE) {
+              if (xhr.status=== _OK) {
+                fn(JSON.parse(xhr.responseText));
+              }else{
+                fn({status:xhr.status});
+              }
+            }
+          }
+        }
+        function genElementText(element,text,className){
+          var d=document.createElement(element);
+          d.className=className;
+          d.appendChild(document.createTextNode(text));
+          return d;
+        }
+        function genSpanText(text,className){
+          return genElementText("span",text,className);
+        }
+        function genImg(url,className){
+          var img=document.createElement("img");
+          img.src=url;
+          img.className=className;
+          return img;
+        }
+        function buildElement(url,username,local,time,comments,likes,profile_url) {
+          var div=document.createElement("div");
+          div.className="element-root";
+          var divTop=document.createElement("div");
+          divTop.className="element-top";
+          var divBottom=document.createElement("div");
+          divBottom.className="element-bottom";
+
+          var user=genSpanText(username,"user");
+          var loc=genSpanText(local,"local");
+          var com=genSpanText(comments,"comments");
+          var lik=genSpanText(likes,"likes")
+
+          var date=new Date(time*1000).toISOString().slice(0, 10);//first convert to milliseconds
+          var dateElement=genSpanText(date,"date");
+
+          var img=genImg(url);
+
+          divTop.appendChild(img);
+          divBottom.appendChild(user);
+          divBottom.appendChild(loc);
+          divBottom.appendChild(dateElement);
+          divBottom.appendChild(com);
+          divBottom.appendChild(lik);
+
+          div.appendChild(divTop);
+          div.appendChild(divBottom);
+          return div;
+        }
+
+        function fillUi (mydata) {
+          root.innerHTML="";//clear root
+          for (var i = 0; i < mydata.data.length; i++) {
+            var d = mydata.data[i];
+            var location="";
+            if(d.location != null){
+              location=d.location.name;
+            }else{
+              location="No location";
+            }
+
+            var elem=buildElement(d.images.standard_resolution.url,d.user.username,location,d.created_time,d.comments.count,d.likes.count,d.user.profile_picture);
+            root.appendChild(elem);
+          }
+        }
+
+        return {
+          init:  function (_root) {
+            root=_root;
+          },
+          render: function () {
+            getData(fillUi);
+          }
+      };
+      })();
+
+
+      App.init(document.getElementsByTagName("body")[0])
+      App.render();
+
+    }
+  </script>
+</html>
